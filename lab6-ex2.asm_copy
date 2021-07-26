@@ -1,0 +1,278 @@
+.data 0x10000000 ##!
+  display: 	.space 65536
+  		.align 2
+  redPrompt:	.asciiz "Enter a RED color value for the background (integer in range 0-255):\n"
+  greenPrompt:	.asciiz "Enter a GREEN color value for the background (integer in range 0-255):\n"
+  bluePrompt:	.asciiz "Enter a BLUE color value for the background (integer in range 0-255):\n"
+  redLinePrompt:	.asciiz "Enter a RED color value for the line (integer in range 0-255):\n"
+  greenLinePrompt:	.asciiz "Enter a GREEN color value for the line (integer in range 0-255):\n"
+  blueLinePrompt:	.asciiz "Enter a BLUE color value for the line (integer in range 0-255):\n"
+  x1Prompt: 	.asciiz "Enter x1 (integer in range 0-127):\n"  
+  y1Prompt: 	.asciiz "Enter y1 (integer in range 0-127):\n"
+  x2Prompt: 	.asciiz "Enter x2 (integer in range 0-127):\n"
+  y2Prompt: 	.asciiz "Enter y2 (integer in range 0-127):\n"
+
+
+.text 0x00400000 ##!
+main:
+
+	addi	$v0, $0, 4  			# system call 4 is for printing a string
+	la 	$a0, redPrompt 		# address of columnPrompt is in $a0
+	syscall           			# print the string
+	# read in the R value
+	addi	$v0, $0, 5			# system call 5 is for reading an integer
+	syscall 				# integer value read is in $v0
+ 	add	$s0, $0, $v0			# copy N into $s0
+ 	
+ 	
+ 	
+ 	addi	$v0, $0, 4  			# system call 4 is for printing a string
+	la 	$a0, greenPrompt 		# address of columnPrompt is in $a0
+	syscall           			# print the string
+	# read in the G value
+	addi	$v0, $0, 5			# system call 5 is for reading an integer
+	syscall 				# integer value read is in $v0
+ 	add	$s1, $0, $v0			# copy N into $s1
+ 	
+ 	
+ 	
+ 	addi	$v0, $0, 4  			# system call 4 is for printing a string
+	la 	$a0, bluePrompt 		# address of columnPrompt is in $a0
+	syscall           			# print the string
+	# read in the B value
+	addi	$v0, $0, 5			# system call 5 is for reading an integer
+	syscall 				# integer value read is in $v0
+ 	add	$s2, $0, $v0			# copy N into $s2
+ 	
+ 	j setupDisplay
+ 	
+ 	
+	
+# Exit from the program
+exit:
+  ori $v0, $0, 10       		# system call code 10 for exit
+  syscall               		# exit the program
+  
+##################################################################################
+##   Do not modify any of the code above    		                        ##
+##################################################################################
+	
+setupDisplay:
+	li $t0, 0
+	li $s3, 16384
+##################################################################################
+##   Insert your code for getting combining the RGB integers (from 		##
+##   exercise 1) here!  
+	sll $t5, $s1, 8			#shift green left two bytes
+	sll $t4, $s0, 16		# shift red left 4 bytes
+	or $t1, $t5, $t4		# or these two
+	or $t1, $t1, $s2		# or the red/green with blue
+	
+	j drawDisplay  		                        		##
+#################################################################################
+	
+drawDisplay:
+	mul $t3, $t0, 4
+	sw $t1, display($t3)
+	addi $t0, $t0, 1
+	bne $t0, $s3, drawDisplay
+	
+	
+readLineColors:
+	addi	$v0, $0, 4  	
+	la 	$a0, redLinePrompt 
+	syscall           	
+	# read in the R value
+	addi	$v0, $0, 5	
+	syscall 		
+ 	add	$s0, $0, $v0	
+ 	
+ 	
+ 	
+ 	addi	$v0, $0, 4  			
+	la 	$a0, greenLinePrompt 		
+	syscall           			
+	# read in the G value
+	addi	$v0, $0, 5			
+	syscall 				
+ 	add	$s1, $0, $v0			
+ 	
+ 	
+ 	
+ 	addi	$v0, $0, 4  		
+	la 	$a0, blueLinePrompt 	
+	syscall           		
+	# read in the B value
+	addi	$v0, $0, 5		
+	syscall 			
+ 	add	$s2, $0, $v0	
+ 	
+ 	
+##################################################################################
+##   Insert your code for getting combining the RGB integers (from 		##
+##   exercise 1) here!				
+
+	# Combining RGB integers below
+		
+	sll $t5, $s1, 8			# shift green left two bytes
+	sll $t4, $s0, 16		# shift red left 4 bytes
+	add $s3, $0, $0			# initialize line color reg to 0
+	or $s3, $t5, $t4		# or these two
+	or $s3, $s3, $s2		# put line color in s3
+											##
+##################################################################################	
+	j setupDrawLine # Do not change this line
+	
+readLineCoordinates:
+	# save pointer values
+	
+	# initialize stack items
+	addi $sp, $sp, -8
+	sw $ra, 4($sp)		# save ra
+	sw $fp, 0($sp)		# save fp 
+	addi $fp, $sp, 4	# set fp 
+	
+	addi	$v0, $0, 4  	
+	la 	$a0, x1Prompt
+	syscall           	
+	addi	$v0, $0, 5	
+	syscall 		
+ 	add	$s0, $0, $v0	
+ 	
+ 	
+ 	
+ 	addi	$v0, $0, 4  			
+	la 	$a0, y1Prompt
+	syscall           			
+	addi	$v0, $0, 5			
+	syscall 				
+ 	add	$a1, $0, $v0			
+ 	
+ 	
+ 	
+ 	addi	$v0, $0, 4  		
+	la 	$a0, x2Prompt	
+	syscall           		
+	addi	$v0, $0, 5		
+	syscall 			
+ 	add	$a2, $0, $v0	
+ 	
+ 	addi	$v0, $0, 4  		
+	la 	$a0, y2Prompt	
+	syscall           		
+	addi	$v0, $0, 5		
+	syscall 			
+ 	add	$a3, $0, $v0
+ 	
+ 	move $a0, $s0	
+ 	
+	# Insert any necessary code #
+
+	# restore stuff
+	addi $sp, $fp, 4
+	lw $ra, 0($fp)
+	lw $fp, -4($fp)
+	jr $ra
+
+
+setupDrawLine:
+	# Insert any necessary code #
+	
+	addi $sp, $sp, -8
+	sw $ra, 4($sp)		# save ra
+	sw $fp, 0($sp)		# save fp 
+	addi $fp, $sp, 4	# set fp
+	
+	jal drawLine # Do not change this line
+	
+	j exit	     # Do not change this line	
+
+drawLine:
+##################################################################################
+##   Insert your code here for setting up the stack frame, reading in line 	##
+##   coordinates, and drawing the line itself. Return to setupDrawLine when	##
+##   finished, so it can call 'j exit'						##
+##################################################################################
+	
+	# initialize stack items
+	addi $sp, $sp, -8
+	sw $ra, 4($sp)		# save ra
+	sw $fp, 0($sp)		# save fp 
+	addi $fp, $sp, 4	# set fp
+
+	# save $s0 onto the stack?
+
+	jal readLineCoordinates
+	
+	# store dx and dy
+	sub $s0, $a2, $a0	# store dx in s0
+	sub $s1, $a3, $a1	# store dy in s1
+
+	# get the memory address for x1,y1
+	sll $t2, $a0, 2		# multiply x by 4
+	sll $t3, $a1, 9		# myltiply y by 512
+	add $s6, $t2, $t3	# add the two values to get memory address in $s6
+	
+	# paint the first point
+	sw $s3, display($s6) 	# paint memory addr in s6 the color in s3
+
+	# start $s0 at x1
+	addi $s4, $a0, 0
+	
+	# set up loop stack to save s4, s5, s6
+	addi $sp, $sp, -12
+	sw $s4, 8($sp)
+	sw $s5, 4($sp)
+	sw $s6, 0($sp)
+	
+	jal loop
+	
+	# get the memory address for the second point 
+	sll $s4, $a2, 2		# multiply x2 by 4
+	sll $s5, $a3, 9		# myltiply y2 by 512
+	add $s6, $s5, $s4 	# add the two values to get memory address in $s6
+	
+	# draw the second point
+	sw $s3, display($s6) 	# paint memory addr in s6 the color in s3
+	
+	# restore pointers, go back to setupDrawLine
+	addi $sp, $fp, 4
+	lw $ra, 0($fp)
+	lw $fp, -4($fp)
+	jr $ra
+	
+	
+loop: 
+	
+	# formula to get y-value into s5
+	sub $s5, $s4, $a0	# x - x1
+	mul $s5, $s1, $s5		# dy *		
+	div $s5, $s5, $s0	# / dx
+	add $s5, $s5, $a1 	# + y1; final result of y = y1 +(dy(x-x1))/dx
+	
+	# get the memory address
+	sll $t0, $s4, 2		# multiply x by 4
+	sll $t1, $s5, 9		# myltiply y by 512
+	add $s6, $t1, $t0	# add the two values to get memory address in $s6
+	
+	sw $s3, display($s6) 	# paint memory addr in s6 the color in s3
+	
+	# increment x-value
+	addi $s4, $s4, 1	
+	
+	# check condition
+	blt $s4, $a2, loop	# go through loop again in x counter ($s4) = x2 ($a2) 
+	
+	# restore saved values
+	lw $s4, -8($fp)
+	lw $s5, -12($fp)
+	lw $s6, -16($fp)
+	
+	addi $sp, $fp, 4
+	lw $ra, 0($fp)
+	lw $fp, -4($fp)
+	jr $ra
+	
+	
+	
+	
